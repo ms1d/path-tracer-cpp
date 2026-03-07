@@ -13,13 +13,13 @@ A space for me to learn cuda for a path tracing project (c++).
 
 ## Stack
 
-- c++ & nvidia cuda for most of the project
-
 - asio for udp
 
 - nlohmann/json for json
 
 - cpp-httplib for tcp
+
+- g++ & nvcc for compilers
 
 ## Contributions
 
