@@ -1,3 +1,27 @@
 # Cuda Test Project
 
-A space for me to learn cuda for a path tracing project (c++)
+## About
+
+A space for me to learn cuda for a path tracing project (c++).
+
+## Program flow
+
+1. Input (JSON) containing tris, verts, materials and other scene data via tcp
+2. Start async cuda render job
+3. As pixels finish, send them over a udp connection indexed by frame number & position
+4. Client can handle the pixels received
+
+## Stack
+
+- c++ & nvidia cuda for most of the project
+
+- asio for udp
+
+- nlohmann/json for json
+
+- cpp-httplib for tcp
+
+## Contributions
+
+Advice + guidance appreciated, but this is mainly a solo learning project for myself.
+Feel free to contact me for any queries or concerns.
