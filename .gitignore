@@ -1,4 +1,4 @@
-# Build directory
+# Build directories
 /build/
 
 # CMake generated files
@@ -6,5 +6,31 @@ CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
 Makefile
-compile_commands.json
 *.dir/
+*.cmake
+
+# Compile commands (generated)
+compile_commands.json
+
+# Object files and compiled outputs
+*.o
+*.obj
+*.so
+*.dylib
+*.dll
+*.exe
+*.a
+*.lib
+
+# CUDA generated files
+*.cubin
+*.ptx
+*.gpu
+*.linkinfo
+*.nvvp
+
+# Temporary files
+*.swp
+*.swo
+*~
+.DS_Store
