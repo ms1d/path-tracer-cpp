@@ -13,7 +13,7 @@ A space for me to learn cuda for a path tracing project (c++).
 
 ## Current Build Instructions
 
-- Configuration: `cmake --preset <preset name>`. See CMakePresets.jsonc for presets
+- Configuration: `cmake --preset <preset name>`. See CMakePresets.json for presets
 
 - Build: `ninja -C build`
 
