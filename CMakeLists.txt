@@ -14,3 +14,5 @@ add_executable(cudaTest src/main.cpp)
 add_subdirectory(lib)
 
 target_link_libraries(cudaTest PRIVATE test)
+target_link_libraries(cudaTest PRIVATE ray)
+target_link_libraries(cudaTest PRIVATE vec3)
