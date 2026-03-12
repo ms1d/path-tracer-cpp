@@ -1,7 +1,6 @@
 #pragma once
 
-#include "vec3.h"
-#include <__clang_cuda_runtime_wrapper.h>
+#include "vec.h"
 #ifndef __host__
 #define __host__
 #endif
@@ -16,7 +15,22 @@ struct matrix {
 		
 		__host__ __device__ float det() const;
 
-		__host__ __device__ matrix<r, c> operator*(float scalar) const;
-		
-		__host__ __device__ matrix<r, c> operator*(const vec3& vector) const;
+		__host__ __device__ matrix<r, c> operator*=(float scalar) {
+			for (int i = 0; i < r; i++) {
+				for (int j = 0; j < c; j++) {
+					data[i][j] *= scalar;
+				}
+			}
+		}
+
+		friend __host__ __device__ matrix<r, c> operator*(matrix<r, c> lhs, float scalar) {
+			lhs *= scalar;
+			return lhs;
+		}
+	
+		__host__ __device__ vec<c> operator*=(const vec<c>& vector) const {
+
+		};
+
+		__host__ __device__ vec<c> operator*(const vec<c>& vector) const;
 };

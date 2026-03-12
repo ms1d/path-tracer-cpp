@@ -1,4 +1,5 @@
 #include "matrix.h"
+#include "vec.h"
 
 template<size_t r, size_t c>
 __host__ __device__ float matrix<r, c>::det() const {
@@ -8,7 +9,7 @@ __host__ __device__ float matrix<r, c>::det() const {
 	return 0;
 }
 
-// Implementation of specific sizes
+// Implementation of specific sizes (tbd)
 template<>
 __host__ __device__ float matrix<2, 2>::det() const {
 	return 0;
@@ -24,18 +25,15 @@ __host__ __device__ float matrix<4, 4>::det() const {
 	return 0;
 }
 
-// Scalar multiplication
+// Vector multiplication (transformation)
 template<size_t r, size_t c>
-__host__ __device__ matrix<r,c> matrix<r, c>::operator*(float scalar) const {
+__host__ __device__ vec<c> matrix<r, c>::operator*(const vec<c>& vector) const {
+	vec<c> res;
+
 	for (int i = 0; i < r; i++) {
-		for (int j = 0; j < c; j++) {
-			data[i][j] *= scalar;
-		}
+		vec<c> row(data[i]);
+		res[i] = vector * row;
 	}
-}
 
-// Vector multiplication
-template<size_t r, size_t c>
-__host__ __device__ matrix<r, c> matrix<r, c>::operator*(const vec3& vector) const {
-
+	return res;
 }
