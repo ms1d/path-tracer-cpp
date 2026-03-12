@@ -1,8 +1,8 @@
 # Build directories
 /build/
 
-# Temp Test directories
-Testing/Temporary
+# Temp Test directory
+/Testing/Temporary
 
 # CMake generated files
 CMakeCache.txt
