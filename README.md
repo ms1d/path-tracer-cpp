@@ -17,6 +17,8 @@ A space for me to learn cuda for a path tracing project (c++).
 
 - Build: `ninja -C build`
 
+- Test: `cd build && ctest` from project root
+
 ## Stack
 
 - CMake + Ninja for build tools
