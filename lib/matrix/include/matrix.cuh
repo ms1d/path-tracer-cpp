@@ -34,6 +34,24 @@ struct matrix {
 
 
 
+	__host__ __device__ matrix& operator-=(const matrix& other) {
+		for (int i = 0; i < r; i++) {
+			for (int j = 0; j < c; j++) {
+				data[i][j] -= other.data[i][j];
+			}
+		}
+
+		return *this;
+	}
+
+	__host__ __device__ matrix operator-(const matrix& other) const {
+		matrix res = *this;
+		res -= other;
+		return res;
+	}
+
+
+
 	__host__ __device__ float det() const {
 		static_assert(r == c, "Matrix must be square");
 		throw std::exception();
