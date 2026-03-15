@@ -22,9 +22,9 @@ void cross_3d_vec_cu() {
 	
 	vec<3> check_vec;
 
-	check_vec.data[0] = v1->data[1] * v2->data[2] - v1->data[2] * v2->data[1];
-	check_vec.data[1] = v1->data[2] * v2->data[0] - v1->data[0] * v2->data[2];
-	check_vec.data[2] = v1->data[0] * v2->data[1] - v1->data[1] * v2->data[0];
+	check_vec.x = v1->y * v2->z - v1->z * v2->y;
+	check_vec.y = v1->z * v2->x - v1->x * v2->z;
+	check_vec.z = v1->x * v2->y - v1->y * v2->x;
 
 	for (int i = 0; i < 3; i++) {
 		assert(check_vec.data[i] - epsilon <= v3->data[i] && check_vec.data[i] + epsilon >= v3->data[i]);
@@ -41,9 +41,9 @@ void cross_3d_vec_cpp() {
 
 	vec<3> check_vec;
 
-	check_vec.data[0] = v1.data[1] * v2.data[2] - v1.data[2] * v2.data[1];
-	check_vec.data[1] = v1.data[2] * v2.data[0] - v1.data[0] * v2.data[2];
-	check_vec.data[2] = v1.data[0] * v2.data[1] - v1.data[1] * v2.data[0];
+	check_vec.x = v1.y * v2.z - v1.z * v2.y;
+	check_vec.y = v1.z * v2.x - v1.x * v2.z;
+	check_vec.z = v1.x * v2.y - v1.y * v2.x;
 
 	assert(check_vec == v3);
 }
