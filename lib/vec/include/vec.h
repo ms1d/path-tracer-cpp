@@ -95,9 +95,10 @@ struct vec {
 		}
 
 		__host__ __device__ vec<3>& operator^=(const vec<3>& other) {
-			data[0] = data[1]*other.data[2] - data[2]*other.data[1];
-			data[1] = data[2]*other.data[0] - data[0]*other.data[2];
-			data[2] = data[0]*other.data[1] - data[1]*other.data[0];
+			float x = data[0], y = data[1], z = data[2];
+			data[0] = y*other.data[2] - z*other.data[1];
+			data[1] = z*other.data[0] - x*other.data[2];
+			data[2] = x*other.data[1] - y*other.data[0];
 			return *this;
 		}
 

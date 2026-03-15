@@ -21,8 +21,7 @@ void add_vec_cu() {
 	add_vec_kernel<<<1, 1>>>(v1, v2, v3);
 	cudaDeviceSynchronize();
 
-	for (size_t i = 0; i < dim; i++) 
-        assert(v3->data[i] == v1->data[i] + v2->data[i]);
+	assert(*v3 == *v1 + *v2);
 
 	cudaFree(v1);
 	cudaFree(v2);
