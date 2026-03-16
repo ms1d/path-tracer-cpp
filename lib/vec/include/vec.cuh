@@ -36,6 +36,7 @@ struct vec_base {
     }
 
 
+
 	__host__ __device__ float operator[](int i) const {
 		return derived_data()[i];
 	}

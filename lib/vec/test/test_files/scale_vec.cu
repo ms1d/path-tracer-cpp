@@ -28,7 +28,7 @@ void scale_vec_cu() {
 
 	vec<dim> check_vec;
 	for (size_t i = 0; i < dim; i++) {
-		check_vec.data[i] = v1->data[i] * scale;
+		check_vec.data[i] = v1->data[i] * *scale;
 	}
 
 	assert(*v2 == check_vec);
@@ -60,7 +60,11 @@ void scale_vec_cpp() {
 template<size_t dim>
 struct scale_vec {
 	void operator()() {
+		// Test for floating point accuracy on both CPU & GPU
 		scale_vec_cpp<dim>();
+		scale_vec_cu<dim>();
+
+		// Hardcoded test for algorithm correctness
 	}
 };
 

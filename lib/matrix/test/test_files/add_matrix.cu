@@ -44,6 +44,30 @@ struct add_matrix {
 		add_matrix_cu<r1, c1>();
 
 		// Hardcoded test for algorithm correctness
+		add_matrix_example();
+	}
+
+	void add_matrix_example() {
+		matrix<3,3> m1, m2;
+
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 3; j++) {
+				m1.data[i][j] = i + j;
+				m2.data[i][j] = i * j;
+			}
+		}
+
+		matrix<3,3> res = m1 + m2;
+
+		assert(res.data[0][0] == 0);
+		assert(res.data[0][1] == 1);
+		assert(res.data[0][2] == 2);
+		assert(res.data[1][0] == 1);
+		assert(res.data[1][1] == 3);
+		assert(res.data[1][2] == 5);
+		assert(res.data[2][0] == 2);
+		assert(res.data[2][1] == 5);
+		assert(res.data[2][2] == 8);
 	}
 };
 

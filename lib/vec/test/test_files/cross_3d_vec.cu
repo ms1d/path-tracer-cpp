@@ -46,7 +46,11 @@ void cross_3d_vec_cpp() {
 }
 
 int main() {
+	// Test for floating point accuracy on both CPU & GPU
 	cross_3d_vec_cpp();
 	cross_3d_vec_cu();
-    return 0;
+    
+	// Hardcoded test for algorithm correctness
+	
+	return 0;
 }

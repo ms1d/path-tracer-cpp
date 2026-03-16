@@ -50,8 +50,11 @@ void dot_vec_cpp() {
 template<size_t dim>
 struct dot_vec {
 	void operator()() {
+		// Test for floating point accuracy on both CPU & GPU
 		dot_vec_cpp<dim>();
 		dot_vec_cu<dim>();
+
+		// Hardcoded test for algorithm correctness
 	}
 };
 

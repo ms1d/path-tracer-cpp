@@ -39,8 +39,11 @@ void equate_vec_cpp() {
 template<size_t dim>
 struct equate_vec {
 	void operator()() {
+		// Test for floating point accuracy on both CPU & GPU
 		equate_vec_cpp<dim>();
 		equate_vec_cu<dim>();
+
+		// Hardcoded test for algorithm correctness
 	}
 };
 

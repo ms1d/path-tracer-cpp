@@ -69,6 +69,23 @@ struct transform_vector {
 		transform_vector_cu<r1, c1>();
 
 		// Hardcoded test for algorithm correctness
+		transform_vector_example();
+	}
+
+	void transform_vector_example() {
+		matrix<3,3> m;
+		const vec<3> v{0, 1, 2};
+
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 3; j++) {
+				m.data[i][j] = i + j;
+			}
+		}
+
+		vec<3> res = m * v;
+		assert(res.x == 5);
+		assert(res.y == 8);
+		assert(res.z == 11);
 	}
 };
 

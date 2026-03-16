@@ -79,7 +79,33 @@ struct mult_matrix {
 			mult_matrix_cu<r1, c1, r2, c2>();
 
 			// Hardcoded test for algorithm correctness
+			mult_matrix_example();
 		}
+	}
+
+	void mult_matrix_example() {
+		matrix<3,3> m1, m2;
+
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 3; j++) {
+				m1.data[i][j] = i + j;
+				m2.data[i][j] = i * j;
+			}
+		}
+
+		matrix<3,3> res1 = m1 * m2, res2 = m2 * m1;
+
+		assert(res1 != res2);
+		assert(res1.data[0][0] == 0), assert(res2.data[0][0] == 0);
+		assert(res1.data[0][1] == 5), assert(res2.data[0][1] == 0);
+		assert(res1.data[0][2] == 10), assert(res2.data[0][2] == 0);
+		assert(res1.data[1][0] == 0), assert(res2.data[1][0] == 5);
+		assert(res1.data[1][1] == 8), assert(res2.data[1][1] == 8);
+		assert(res1.data[1][2] == 16), assert(res2.data[1][2] == 11);
+		assert(res1.data[2][0] == 0), assert(res2.data[2][0] == 10);
+		assert(res1.data[2][1] == 11), assert(res2.data[2][1] == 16);
+		assert(res1.data[2][2] == 22), assert(res2.data[2][2] == 22);
+
 	}
 };
 

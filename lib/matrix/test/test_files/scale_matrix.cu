@@ -61,7 +61,31 @@ struct scale_matrix {
 		scale_matrix_cu<r1, c1>();
 		
 		// Hardcoded test for algorithm correctness
+		scale_matrix_example();
+	}
 
+	void scale_matrix_example() {
+        matrix<3,3> m;
+        constexpr float scalar = 2.0f;
+
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 3; j++) {
+				m.data[i][j] = i + j;
+			}
+		}
+
+		matrix<3,3> res1 = m * scalar, res2 = scalar * m;
+
+		assert(res1 == res2);
+		assert(res1.data[0][0] == 0);
+		assert(res1.data[0][1] == 2);
+		assert(res1.data[0][2] == 4);
+		assert(res1.data[1][0] == 2);
+		assert(res1.data[1][1] == 4);
+		assert(res1.data[1][2] == 6);
+		assert(res1.data[2][0] == 4);
+		assert(res1.data[2][1] == 6);
+		assert(res1.data[2][2] == 8);
 	}
 };
 

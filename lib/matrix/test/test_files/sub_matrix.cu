@@ -21,7 +21,7 @@ void sub_matrix_cu() {
 	sub_matrix_kernel<<<1,1>>>(m1, m2, res);
 	cudaDeviceSynchronize();
 
-	assert(*res == *m2 - *m1);
+	assert(*res == *m1 - *m2);
 
 	cudaFree(m1);
     cudaFree(m2);
@@ -44,6 +44,31 @@ struct sub_matrix {
 		sub_matrix_cu<r1, c1>();
 
 		// Hardcoded test for algorithm correctness
+		sub_matrix_example();
+	}
+
+	void sub_matrix_example() {
+		matrix<3,3> m1, m2;
+
+		for (int i = 0; i < 3; i++) {
+			for (int j = 0; j < 3; j++) {
+				m1.data[i][j] = i + j;
+				m2.data[i][j] = i * j;
+			}
+		}
+
+		matrix<3,3> res1 = m1 - m2, res2 = m2 - m1;
+
+		assert(res1 == -1 * res2);
+		assert(res1.data[0][0] == 0);
+		assert(res1.data[0][1] == 1);
+		assert(res1.data[0][2] == 2);
+		assert(res1.data[1][0] == 1);
+		assert(res1.data[1][1] == 1);
+		assert(res1.data[1][2] == 1);
+		assert(res1.data[2][0] == 2);
+		assert(res1.data[2][1] == 1);
+		assert(res1.data[2][2] == 0);
 	}
 };
 

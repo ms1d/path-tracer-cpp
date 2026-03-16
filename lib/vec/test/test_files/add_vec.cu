@@ -50,8 +50,11 @@ void add_vec_cpp() {
 template<size_t dim>
 struct add_vec {
     void operator()() const {
+		// Test for floating point accuracy on both CPU & GPU
 		add_vec_cpp<dim>();
 		add_vec_cu<dim>();
+
+		// Hardcoded test for algorithm correctness
     }
 
 };

@@ -51,8 +51,11 @@ void sub_vec_cpp() {
 template<size_t dim>
 struct sub_vec {
     void operator()() const {
+		// Test for floating point accuracy on both CPU & GPU
 		sub_vec_cpp<dim>();
 		sub_vec_cu<dim>();
+
+		// Hardcoded test for algorithm correctness
     }
 };
 
