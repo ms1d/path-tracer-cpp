@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vec.cuh"
+#include <utility>
 #ifndef __host__
 #define __host__
 #endif
@@ -81,8 +82,8 @@ struct mat {
 
 
 
-	__host__ __device__ float det() const requires(r == c && r == 1) { return data[0][0]; }
-	__host__ __device__ float det() const requires(r == c && r > 1){
+	__host__ __device__ float det() const requires(r == c && r == 2) { return data[0][0] * data[1][1] - data[0][1] * data[1][0]; }
+	__host__ __device__ float det() const requires(r == c && r > 2){
 		float det = 0;
 
 		int sign = 1;
@@ -95,6 +96,31 @@ struct mat {
 		return det;
 	};
 
+
+
+	__host__ __device__ mat transpose_inplace() requires(r == c) {
+		for (int i = 0; i < r; i++) {
+			for (int j = 0; j < c; j++) {
+				std::swap(data[i][j], data[j][i]);
+			}
+		}
+
+		return *this;
+	}
+
+
+
+	__host__ __device__ mat transpose() const {
+		mat<c,r> res;
+		
+		for (int i = 0; i < r; i++) {
+			for (int j = 0; j < c; j++) {
+				res.data[i][j] = data[j][i];
+			}
+		}
+
+		return res;
+	}
 
 
 	__host__ __device__ mat& operator*=(float scalar) {
