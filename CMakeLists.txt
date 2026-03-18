@@ -21,9 +21,9 @@ add_executable(cudaTest src/main.cpp)
 add_executable(asio_send src/asio_send_test.cpp)
 add_executable(asio_receive src/asio_receive_test.cpp)
 
-target_include_directories(asio_send PRIVATE asio/include)
+target_include_directories(asio_send PRIVATE lib/asio/include)
 target_compile_definitions(asio_send PRIVATE ASIO_STANDALONE)
-target_include_directories(asio_receive PRIVATE asio/include)
+target_include_directories(asio_receive PRIVATE lib/asio/include)
 target_compile_definitions(asio_receive PRIVATE ASIO_STANDALONE)
 
 add_subdirectory(lib)
