@@ -1,13 +1,39 @@
 #pragma once
 
+
+
 #include "vec.cuh"
 #include <utility>
+
+
+
 #ifndef __host__
 #define __host__
 #endif
 #ifndef __device__
 #define __device__
 #endif
+
+
+
+// Generic r by c matrix. Supports:
+//
+//		- Addition + Addition assignment
+//		- Subtraction + Subtraction assignment
+//
+//		- Matrix Multiplication + Multiplication assignment
+//		- Vector Multiplication/Transformation (mat * vec only)
+//		- Scalar Multiplication (mat * scalar + assignment, scalar * mat no assignment)
+//
+//		- Tranposition + Transposition assignment (transpose_inplace)
+//
+//		- Determinant (simple Laplace expansion, O(n!), DO NOT USE FOR LARGE MATRICES!)
+//
+//		- Generating minor matrices (row to leave out, collumn to leave out)
+//
+//		- Equality test (with 2e-6 tolerance)
+//
+//		- (TBI) Inverse
 
 template <size_t r, size_t c>
 struct mat {
@@ -110,9 +136,9 @@ struct mat {
 
 
 
-	__host__ __device__ constexpr mat transpose() const {
+	__host__ __device__ constexpr mat<c,r> transpose() const {
 		mat<c,r> res;
-		
+
 		for (int i = 0; i < r; i++) {
 			for (int j = 0; j < c; j++) {
 				res.data[i][j] = data[j][i];
