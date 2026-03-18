@@ -26,4 +26,7 @@ target_compile_definitions(asio_send PRIVATE ASIO_STANDALONE)
 target_link_libraries(asio_receive PRIVATE asio)
 target_compile_definitions(asio_receive PRIVATE ASIO_STANDALONE)
 
+#JSON
+#target_link_libraries(cudaTest PRIVATE json)
+
 add_subdirectory(lib)
