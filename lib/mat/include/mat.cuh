@@ -139,8 +139,8 @@ struct mat {
 	__host__ __device__ constexpr mat<c,r> transpose() const {
 		mat<c,r> res;
 
-		for (int i = 0; i < r; i++) {
-			for (int j = 0; j < c; j++) {
+		for (int i = 0; i < c; i++) {
+			for (int j = 0; j < r; j++) {
 				res.data[i][j] = data[j][i];
 			}
 		}
