@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.26)
 
-project(cudaTest LANGUAGES CXX CUDA)
+project(path-tracer LANGUAGES CXX CUDA)
 
 option(BUILD_TESTS "Build tests" ON)
 
@@ -15,18 +15,10 @@ if(BUILD_TESTS)
     enable_testing()
 endif()
 
-add_executable(cudaTest src/main.cpp)
+add_executable(main src/main.cpp)
 
-#Asio
-add_executable(asio_send src/asio_send_test.cpp)
-add_executable(asio_receive src/asio_receive_test.cpp)
-
-target_link_libraries(asio_send PRIVATE asio)
-target_compile_definitions(asio_send PRIVATE ASIO_STANDALONE)
-target_link_libraries(asio_receive PRIVATE asio)
-target_compile_definitions(asio_receive PRIVATE ASIO_STANDALONE)
-
-#JSON
-#target_link_libraries(cudaTest PRIVATE json)
+add_subdirectory(src/http-server)
+add_subdirectory(src/udp-server)
+add_subdirectory(src/path-tracer)
 
 add_subdirectory(lib)
