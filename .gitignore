@@ -44,3 +44,5 @@ compile_commands.json
 # Helper scripts at project root
 /test
 /test-failed
+/run-dev
+/run-rel

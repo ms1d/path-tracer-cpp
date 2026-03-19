@@ -1,54 +1,72 @@
+#include <cstdio>
+#include <cstdlib>
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <vector>
+
+std::vector<pid_t> children;
+
+void kill_children() {
+	for (auto pid : children) {
+		if (pid > 0) kill(pid, SIGKILL);
+	}
+	_exit(1);
+}
+
+void sig_handler(int _) {
+	kill_children();
+	_exit(1);
+}
+
+pid_t spawn(const char *path) {
+    pid_t pid = fork();
+    if (pid == 0) {
+        execl(path, path, (char *)NULL);
+        perror("execl failed");
+        _exit(1);
+    }
+    if (pid < 0) {
+        perror("fork failed");
+    }
+
+	children.push_back(pid);
+
+    return pid;
+}
 
 int main() {
-	// Spin up the http server by cloning this process and running the http-server exe
-	pid_t http_pid = fork();
-	if (http_pid == 0) {
-		execl("./http-server", "http-server", nullptr);
-		_exit(1);
-	}
+	signal(SIGINT, sig_handler);
+    signal(SIGTERM, sig_handler);
+	atexit(kill_children);
 
-	// Spin up the udp server the same way
-	pid_t udp_pid = fork();
-	if (udp_pid == 0) {
-		execl("./udp-server", "udp-server", nullptr);
-		_exit(1);
-	}
+    pid_t http_pid = spawn("./http-server/http-server");
+    pid_t udp_pid  = spawn("./udp-server/udp-server");
 
-	while (true) {
-		// Keep restarting if child dies
-		if (http_pid <= 0) {
-			http_pid = fork();
-			if (http_pid == 0) {
-				execl("./proc1", "./proc1", (char*)nullptr);
-				_exit(1);
-			}
+    while (1) {
+        if (http_pid <= 0)
+            http_pid = spawn("./http-server/http-server");
+
+        if (udp_pid <= 0)
+            udp_pid = spawn("./udp-server/udp-server");
+
+        int status;
+        pid_t r;
+
+        while ((r = waitpid(-1, &status, WNOHANG)) > 0) {
+            if (r == http_pid) http_pid = -1;
+            else if (r == udp_pid) udp_pid = -1;
+        }
+
+		// From time to time, clear children that are not working (pid of -1)
+		std::vector<pid_t> new_children;
+
+		for (auto pid : children) {
+			if (pid > 0) new_children.push_back(pid);
 		}
 
-		if (udp_pid <= 0) {
-			udp_pid = fork();
-			if (udp_pid == 0) {
-				execl("./proc2", "./proc2", (char*)nullptr);
-				_exit(1);
-			}
-		}
+		children = new_children;
 
-		// Handle exits
-		int status;
-		pid_t r;
-
-		while ((r = waitpid(-1, &status, WNOHANG)) > 0) {
-			if (r == http_pid) {
-				http_pid = -1;  // mark dead → will restart next loop
-			} else if (r == udp_pid) {
-				udp_pid = -1;
-			}
-		}
-
-		sleep(5);
-	}
-
-	return 1;
+        sleep(5);
+    }
 }

@@ -5,5 +5,5 @@
 inline void submit_render(const httplib::Request& req, httplib::Response& res) {
 	auto body = req.body;
 	res.status = 500;
-	res.set_content("Not implemneted!", "text/plain");
+	res.set_content("Not implemented!", "text/plain");
 }

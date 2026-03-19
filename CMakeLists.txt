@@ -15,10 +15,5 @@ if(BUILD_TESTS)
     enable_testing()
 endif()
 
-add_executable(main src/main.cpp)
-
-add_subdirectory(src/http-server)
-add_subdirectory(src/udp-server)
-add_subdirectory(src/path-tracer)
-
+add_subdirectory(src)
 add_subdirectory(lib)
