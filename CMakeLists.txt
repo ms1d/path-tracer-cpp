@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.26)
 
-project(path-tracer LANGUAGES CXX CUDA)
+project(path-tracer-cpp LANGUAGES CXX CUDA)
 
 option(BUILD_TESTS "Build tests" ON)
 

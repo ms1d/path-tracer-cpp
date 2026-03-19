@@ -1,14 +1,18 @@
-# Cuda Test Project
+# PATH-TRACER-CPP
 
 ## About
 
-A space for me to learn cuda for a path tracing project (c++).
+A CUDA C++ path tracer server as a personal project.
+See also `ms1d/PathTracerApi` and `ms1d/path-tracer-react`.
 
 ## Program flow
 
 1. Input (JSON) containing tris, verts, materials and other scene data via tcp
+
 2. Start async cuda render job (path tracing)
+
 3. As pixels finish, send them over a udp connection indexed by frame number & position
+
 4. Client can handle the pixels received
 
 ## Current Build Instructions
