@@ -28,4 +28,6 @@ inline void health(const httplib::Request& _, httplib::Response& res) {
 
 	res.status = 200;
 	res.set_content(status.dump(4), "application/json");
+
+	file.close();
 }
