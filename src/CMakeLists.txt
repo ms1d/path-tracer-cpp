@@ -5,5 +5,4 @@ target_link_libraries(main PRIVATE jsonlib)
 
 
 add_subdirectory(http-server)
-add_subdirectory(udp-server)
 add_subdirectory(path-tracer)

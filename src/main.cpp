@@ -48,7 +48,7 @@ int main() {
 
 	std::system("mkdir -p state && touch state/status.json");
     pid_t http_pid = spawn("./http-server/http-server");
-    pid_t udp_pid  = spawn("./udp-server/udp-server");
+    pid_t path_tracer_pid  = spawn("./path-tracer/path-tracer");
 
     while (true) {
         if (http_pid <= 0) {
@@ -56,10 +56,10 @@ int main() {
 			status_json["http"] = "dead! restarting...";
 		} else status_json["http"] = "running";
 
-        if (udp_pid <= 0) {
-			udp_pid = spawn("./udp-server/udp-server");
-			status_json["udp"] = "dead! restarting...";
-		} else status_json["udp"] = "running";
+        if (path_tracer_pid <= 0) {
+			path_tracer_pid = spawn("./path-tracer/path-tracer");
+			status_json["path-tracer"] = "dead! restarting...";
+		} else status_json["path-tracer"] = "running";
 
         int status;
         pid_t r;
@@ -67,7 +67,7 @@ int main() {
 		// Detect exits
         while ((r = waitpid(-1, &status, WNOHANG)) > 0) {
             if (r == http_pid) http_pid = -1;
-            else if (r == udp_pid) udp_pid = -1;
+            else if (r == path_tracer_pid) path_tracer_pid = -1;
         }
 
 		// From time to time, clear children that are not working (pid of -1)
