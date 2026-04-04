@@ -10,7 +10,7 @@
 void stream_result(nlohmann::json req) {
 	std::string ip, port;
 	try { ip = req["ip"]; port = req["port"]; assert(port.length() == 4); asio::ip::make_address(ip); std::stoi(port); }
-	catch (std::exception) { perror("JSON did not have 'ip' and 'port'!"); return; }
+	catch (std::exception) { perror("JSON did not have valid 'ip' and 'port'!"); return; }
 
 	asio::io_context io;
 	asio::ip::udp::socket socket(io);

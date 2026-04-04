@@ -7,9 +7,9 @@
 #include <fstream>
 
 // Body has the form:
-// RenderId: string
-// RecieverIP: int
-// RecieverPort: int
+// render_id: string
+// ip: int
+// port: int
 inline void submit_render(const httplib::Request& req, httplib::Response& res) {
 	auto body = req.body;
 
