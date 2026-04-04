@@ -2,6 +2,6 @@
 
 ## Responsibilities
 
-- Run + manage child processes (http-server, udp-server and path-tracer)
+- Run + manage child processes (http-server and path-tracer)
 
 - View health of said processes via http-server's `GET /health` endpoint

@@ -11,9 +11,7 @@ See also `ms1d/PathTracerApi` and `ms1d/path-tracer-react`.
 
 - HTTP - accepts standard REST API requests (health check, submit render)
 
-- UDP - sets up UDP connections with incoming TCP clients and streams pixel outputs
-
-- Path Tracer - powered by cuda to run on the GPU; solves the Rendering Equation
+- Path Tracer - powered by cuda to run on the GPU; streams results back to UDP clients
 
 ## Current Build Instructions
 

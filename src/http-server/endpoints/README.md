@@ -44,7 +44,7 @@ Submits a scene description in JSON format to be queued for rendering.
 - **Headers:**
   - `Content-Type: application/json`
 
-- **Body:** A valid JSON scene description.
+- **Body:** A valid JSON scene description, request ID (for bookeeping), and receiver port + IP.
 
 ### Outputs
 
