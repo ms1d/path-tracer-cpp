@@ -5,8 +5,6 @@
 #include "json.hpp"
 #include <asio.hpp>
 
-
-
 void stream_result(nlohmann::json req) {
 	std::string ip, port;
 	try { ip = req["ip"]; port = req["port"]; assert(port.length() == 4); asio::ip::make_address(ip); std::stoi(port); }
@@ -17,18 +15,14 @@ void stream_result(nlohmann::json req) {
 	socket.open(asio::ip::udp::v4());
 
 	asio::ip::udp::endpoint target(
-		asio::ip::make_address(ip), std::stoi(port)
+			asio::ip::make_address(ip), std::stoi(port)
 	);
 
 	socket.send_to(asio::buffer(req.dump(4)), target);
 }
 
-
-
-void find_earliest_request(int& current_request) {
-	std::filesystem::path dir = "path-tracer/requests";
-	
-	current_request = -1;
+int find_earliest_request() {
+	int current_request = -1;
 
 	for (const auto& entry : std::filesystem::directory_iterator(dir)) {
 		if (entry.is_regular_file() && entry.path().extension() == ".json") {
@@ -38,13 +32,11 @@ void find_earliest_request(int& current_request) {
 	}
 }
 
-
-
 int main() {
 	while (true) {
-		int current_request;
-		find_earliest_request(current_request);
+		std::filesystem::path dir = "path-tracer/requests";
 
+		int current_request = find_earliest_request();
 		if (current_request < 0) { sleep(5); continue; }
 		
 		// Do work here...
