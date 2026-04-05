@@ -9,14 +9,6 @@
 
 
 
-#ifndef __CUDACC__
-#define __host__
-#define __device__
-#define __global__
-#endif
-
-
-
 void stream_result(nlohmann::json res, std::string ip, std::string port) {
 	try { assert(port.length() == 4); asio::ip::make_address(ip); std::stoi(port); }
 	catch (std::exception) { perror("JSON did not have valid 'ip' and 'port'!"); return; }
@@ -53,7 +45,7 @@ void find_earliest_request(int& current_request) {
 void parse_request(const nlohmann::json& request,
 		vec<3>*& verts, uint32_t& verts_len,
 		uint32_t*& tris, uint32_t& tris_len,
-		Materials& mats, uint32_t& mats_len,
+		Materials& mats,
 		uint32_t*& mats_indices, uint32_t& mats_indices_len,
 		vec<3> &camPos, vec<3> &camRot, float &camFov) {
 
@@ -72,7 +64,7 @@ void parse_request(const nlohmann::json& request,
 	auto& tris_json = request["tris"];
 	for (uint32_t i = 0; i < tris_len; i++) tris[i] = tris_json[i].get<uint32_t>();
 
-	mats_len = request["mats"].size();
+	uint32_t mats_len = request["mats"].size();
 	mats.length = mats_len;
 	mats.smoothness = new float[mats_len];
 	mats.metallic = new float[mats_len];
@@ -131,14 +123,23 @@ int main() {
 		uint32_t* tris;
 		uint32_t tris_len;
 		Materials mats;
-		uint32_t mats_len;
 		uint32_t* mats_indices;
 		uint32_t mats_indices_len;
 		vec<3> camPos, camRot;
 		float camFov;
 		
-		parse_request(request, verts, verts_len, tris, tris_len, mats, mats_len, mats_indices, mats_indices_len, camPos, camRot, camFov);
-		start_render(verts, verts_len, tris, tris_len, mats, mats_indices, mats_indices_len, camPos, camRot, camFov);
+		parse_request(request,
+				verts, verts_len,
+				tris, tris_len,
+				mats,
+				mats_indices, mats_indices_len,
+				camPos, camRot, camFov);
+
+		start_render(verts, verts_len,
+				tris, tris_len,
+				mats,
+				mats_indices, mats_indices_len,
+				camPos, camRot, camFov);
 
 		// Trigger stream start - this will poll the buffer and stream back changes made
 		stream_result(nlohmann::json(), request["ip"], request["port"]);
