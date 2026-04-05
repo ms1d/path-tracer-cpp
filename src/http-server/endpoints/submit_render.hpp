@@ -6,6 +6,7 @@
 #include <exception>
 #include <format>
 #include <fstream>
+#include <stdexcept>
 
 // Body has the form:
 // render_id: string
@@ -30,11 +31,11 @@ inline void submit_render(const httplib::Request& req, httplib::Response& res) {
 		int verts_len = j["verts"].size();
 		int tris_len = j["tris"].size();
 		auto& tris = j["tris"];
-		assert(verts_len % 3 == 0);
-		assert(tris_len % 3 == 0);
-		for (int i = 0; i < tris_len; i++) { int tri = tris[i].get<int>(); assert(tri < verts_len / 3 && tri >= 0); }
-	} catch (std::exception) {
-		res.set_content(gen_content(400, "Invalid JSON"), "application/json");
+		if (verts_len % 3 != 0) throw std::runtime_error("Verts must have a length divisble by 3");
+		if (tris_len % 3 != 0) throw std::runtime_error("Tris must have a length divisble by 3");
+		for (int i = 0; i < tris_len; i++) { int tri = tris[i].get<int>(); if (tri >= verts_len / 3 || tri < 0) throw std::runtime_error("An element of tri references an invalid index on verts"); }
+	} catch (const std::exception& e) {
+		res.set_content(gen_content(400, std::format("Invalid JSON. Exception: {}", e.what()).c_str()), "application/json");
 		res.status = 400;
 		return;
 	}
