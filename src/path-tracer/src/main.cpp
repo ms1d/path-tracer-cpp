@@ -1,17 +1,26 @@
-#include <cstdint>
-#include <fstream>
+#include <string>
 #include <unistd.h>
 #include <filesystem>
-#include <format>
 #include <asio.hpp>
-#include "json.hpp"
-#include "renderer.cuh"
+#include "request_handler.hpp"
+#include "structs.cuh"
 
 
 
-void stream_result(nlohmann::json res, std::string ip, std::string port) {
+// Number of buffers per multi-buffer
+constexpr int buffers_count = 3;
+// Default size of each buffer
+constexpr int buffer_size = 1e8;
+// Maximum + current number of requests being handled at once. Determines how many mutli-buffers are allocated at program start
+constexpr int max_requests = 3;
+// Period to sleep if no requests are available
+constexpr int sleep_period = 5;
+
+
+
+void stream_result(Pixel* buffer, std::string ip, std::string port) {
 	try { assert(port.length() == 4); asio::ip::make_address(ip); std::stoi(port); }
-	catch (std::exception) { perror("JSON did not have valid 'ip' and 'port'!"); return; }
+	catch (std::exception) { perror("JSON did not have valid 'ip' and 'port'!"); exit(1); }
 
 	asio::io_context io;
 	asio::ip::udp::socket socket(io);
@@ -22,7 +31,7 @@ void stream_result(nlohmann::json res, std::string ip, std::string port) {
 	);
 
 	// Replace with a while polling loop
-	socket.send_to(asio::buffer(res.dump(4)), target);
+	socket.send_to(asio::buffer(std::to_string(buffer[0].b)), target);
 }
 
 
@@ -42,119 +51,54 @@ void find_earliest_request(int& current_request) {
 
 
 
-void parse_request(const nlohmann::json& request,
-		vec<3>*& verts, uint32_t& verts_len,
-		uint32_t*& tris, uint32_t& tris_len,
-		Materials& mats,
-		uint32_t*& mats_indices, uint32_t& mats_indices_len,
-		vec<3> &camPos, vec<3> &camRot, float &camFov) {
-
-	verts_len = request["verts"].size() / 3;
-	verts = new vec<3>[verts_len];
-	auto& verts_json = request["verts"];
-	for (uint32_t i = 0; i < verts_len; i++) {
-		auto x = verts_json[3 * i + 0].get<float>(),
-			 y = verts_json[3 * i + 1].get<float>(),
-			 z = verts_json[3 * i + 2].get<float>();
-		verts[i] = vec<3>(x,y,z);
-	}
-
-	tris_len = request["tris"].size();
-	tris = new uint32_t[tris_len];
-	auto& tris_json = request["tris"];
-	for (uint32_t i = 0; i < tris_len; i++) tris[i] = tris_json[i].get<uint32_t>();
-
-	uint32_t mats_len = request["mats"].size();
-	mats.length = mats_len;
-	mats.smoothness = new float[mats_len];
-	mats.metallic = new float[mats_len];
-	mats.colors = new vec<3>[mats_len];
-
-	auto& mats_json = request["mats"];
-
-	for (uint32_t i = 0; i < mats_len; i++) {
-		auto& current_mat = mats_json[i];
-		mats.smoothness[i] = current_mat["smoothness"].get<float>();
-		mats.metallic[i] = current_mat["metallic"].get<float>();
-		auto& rgb = current_mat["color"];
-		auto r = rgb[0].get<float>(),
-			 g = rgb[1].get<float>(),
-			 b = rgb[2].get<float>();
-		mats.colors[i] = vec<3>(r,g,b);
-	}
-
-	auto& mat_indices_json = request["mat_indices"];
-	mats_indices_len = mat_indices_json.size();
-	mats_indices = new uint32_t[mats_indices_len];
-	for (uint32_t i = 0; i < mats_indices_len; i++) mats_indices[i] = mat_indices_json[i].get<uint32_t>();
-
-	auto &camera_json = request["camera"],
-	&pos_json = camera_json["pos"],
-	&rot_json = camera_json["rot"];
-	camPos.x = pos_json[0].get<float>(), camRot.x = rot_json[0].get<float>();
-	camPos.y = pos_json[1].get<float>(), camRot.y = rot_json[1].get<float>();
-	camPos.z = pos_json[2].get<float>(), camRot.z = rot_json[2].get<float>();
-	camFov = camera_json["fov"].get<float>();
-}
-
-
-
 int main() {
+	// Buffers setup
+	// buffers is a 3D array. Each element is a multi-buffer for 1 thread ONLY
+	Pixel*** buffers = new Pixel**[max_requests];
+	for (int i = 0; i < max_requests; i++) {
+		buffers[i] = new Pixel*[buffers_count];
+		for (int j = 0; j < buffers_count; j++) {
+			buffers[i][j] = new Pixel[buffer_size];
+		}
+	}
+
+	// The ith buffer owns the ith lock state (used by the ith thread running)
+	bool lock_states[max_requests] = { };
+	int current_request = -1;
+
+	// If the system crashes, move all previous in progress requests back to the default requests dir
+	std::system("mkdir -p path-tracer/requests/in_progress && mv path-tracer/requests/in_progress/* path-tracer/requests/");
+
 	while (true) {
-		int current_request;
 		find_earliest_request(current_request);
 
-		if (current_request < 0) { sleep(5); continue; }
-		
-		// Read the request
-		std::string path_to_current_request = std::format("path-tracer/requests/{}.json", current_request).c_str();
-		std::ifstream file(path_to_current_request);
-		nlohmann::json request;
+		if (current_request < 0) { sleep(sleep_period); continue; }
 
-		try { file >> request; }
-		catch (std::exception) {
-			perror("Failed to read file!");
-			return 1;
-		}
+		// Pass it onto another thread
+		int buffer_to_use = -1;
+		for (int i = 0; i < max_requests; i++) {
+            if (lock_states[i]) continue;
+            buffer_to_use = i;
+            lock_states[i] = true;
+            break;
+        }
 
-		// Parse data + Trigger work start_render
-		vec<3>* verts;
-		uint32_t verts_len;
-		uint32_t* tris;
-		uint32_t tris_len;
-		Materials mats;
-		uint32_t* mats_indices;
-		uint32_t mats_indices_len;
-		vec<3> camPos, camRot;
-		float camFov;
-		
-		parse_request(request,
-				verts, verts_len,
-				tris, tris_len,
-				mats,
-				mats_indices, mats_indices_len,
-				camPos, camRot, camFov);
-
-		start_render(verts, verts_len,
-				tris, tris_len,
-				mats,
-				mats_indices, mats_indices_len,
-				camPos, camRot, camFov);
-
-		// Trigger stream start - this will poll the buffer and stream back changes made
-		stream_result(nlohmann::json(), request["ip"], request["port"]);
-
-		// Once finished work, remove the request
-		std::system(std::format("rm {}", path_to_current_request).c_str());
-
-		delete[] verts;
-		delete[] tris;
-		delete[] mats.smoothness;
-		delete[] mats.metallic;
-		delete[] mats.colors;
-		delete[] mats_indices;
-
+		if (buffer_to_use < 0) { sleep(sleep_period); continue; }
+		// MOVE the current request to an "in_progrss" dir!
+		std::system(std::format("mv path-tracer/requests/{}.json path-tracer/requests/in_progress/{}.json", current_request, current_request).c_str());
+		std::thread(handle_request,
+				current_request, buffers[buffer_to_use],
+				std::ref(lock_states[buffer_to_use]), buffers_count)
+			.detach();
 	}
+
+	for (int i = 0; i < max_requests; i++) {
+		for (int j = 0; j < buffers_count; j++) {
+			delete[] buffers[i][j];
+		}
+		delete[] buffers[i];
+	}
+	delete[] buffers;
 
 	return 1;
 }

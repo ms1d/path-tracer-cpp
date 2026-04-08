@@ -2,11 +2,6 @@
 
 
 
-#include <cstdint>
-#include "vec.cuh"
-
-
-
 #ifndef __host__
 #define __host__
 #endif
@@ -16,16 +11,15 @@
 
 
 
+#include <cstdint>
+#include "vec.cuh"
+
+
+
 // Should fit inside of 16 bytes to aid GPU performance
 struct alignas(16) Pixel {
 	float r,g,b;
 	uint16_t x,y;
-};
-
-struct GpuQueue {
-	Pixel* buffer;
-	int* tail;
-	int capacity;
 };
 
 struct Materials {
