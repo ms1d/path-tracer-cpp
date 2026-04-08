@@ -63,6 +63,7 @@ int main() {
 	}
 
 	// The ith buffer owns the ith lock state (used by the ith thread running)
+	// Each thread will control the lock state, eventually setting it to false when it is finished
 	bool lock_states[max_requests] = { };
 	int current_request = -1;
 
@@ -84,7 +85,7 @@ int main() {
         }
 
 		if (buffer_to_use < 0) { sleep(sleep_period); continue; }
-		// MOVE the current request to an "in_progrss" dir!
+
 		std::system(std::format("mv path-tracer/requests/{}.json path-tracer/requests/in_progress/{}.json", current_request, current_request).c_str());
 		std::thread(handle_request,
 				current_request, buffers[buffer_to_use],

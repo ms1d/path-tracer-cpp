@@ -116,14 +116,13 @@ void handle_request(int current_request, Pixel **buffers, bool &lock_state, int 
 
 	int curr_cpu_buffer = 0;
 	while (true) {
-		if (curr_gpu_buffer.load() <= curr_cpu_buffer) { std::cout << "cpu sleeping rn" << std::endl; sleep(cpu_sleep_period); continue; }
-
+		if (curr_gpu_buffer.load() == -1) break; // in reality, just signal that the loop should end soon before finsihing off work. dont just break
+		else if (curr_gpu_buffer.load() <= curr_cpu_buffer) { sleep(cpu_sleep_period); continue; }
 		// for now, just print something for testing
 		sleep(1);
 		curr_cpu_buffer++;
 		std::cout << "Buffer moved up! Now on buffer " << curr_cpu_buffer << std::endl;
 		int curr_cpu_buffer_index = curr_cpu_buffer % buffers_count;
-		if (curr_gpu_buffer.load() == -1) break; // in reality, just signal that the loop should end soon before finsihing off work. dont just break
 	}
 
 	// Once finished work, remove the request + delete heap data + mark lock as free
