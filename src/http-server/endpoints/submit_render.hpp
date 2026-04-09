@@ -27,11 +27,9 @@
 // mat_indices: uint8_t[]. each element is an index of materials and represents a triangle in order
 // camera { float (fov), float[] (pos), float[] (rot) }
 inline void submit_render(const httplib::Request& req, httplib::Response& res) {
-	auto body = req.body;
-
 	// Assert data validity
 	try {
-		nlohmann::json j = nlohmann::json::parse(body);
+		nlohmann::json j = nlohmann::json::parse(req.body);
 
 		try { std::string _ = j["render_id"].get<std::string>(); } catch (std::exception) { throw std::runtime_error("render_id (string) not found on JSON body"); }
 		try { std::string ip = j["ip"]; asio::ip::make_address(ip); } catch (std::exception) { throw std::runtime_error("Valid ip (string) not found on JSON body"); }
