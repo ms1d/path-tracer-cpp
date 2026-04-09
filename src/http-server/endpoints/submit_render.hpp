@@ -1,5 +1,7 @@
 #pragma once
 
+
+
 #include "httplib.h"
 #include "../helpers/gen_content.hpp"
 #include <cstdint>
@@ -10,16 +12,17 @@
 #include <stdexcept>
 #include <asio.hpp>
 
+
+
 // Body has the form:
 // render_id: string
 // ip: string
 // port: string
 // width: uint16_t
 // height: uint16_t
-// tilesize: uint8_t (usually 64)
 // samples: uint16_t
-// tiles_to_render: bool[][], where tiles_to_render[i][j] = true means
-//	that the (i+1)th tile to the right and (j+1)th tile down should be rendered
+// pixels_to_skip: uint16_t[][]. co-ordinates of all pixels to skip
+//	pixel[i][0] is the ith pixels x co-ordinate. pixel[i][1] is the ith pixels y co-ordinate
 //
 // verts: float[]. every 3 floats = 1 vertex
 // tris: uint32_t[]. every 3 ints = 1 triangle. each element is an index of verts
@@ -27,33 +30,58 @@
 // mat_indices: uint8_t[]. each element is an index of materials and represents a triangle in order
 // camera { float (fov), float[] (pos), float[] (rot) }
 inline void submit_render(const httplib::Request& req, httplib::Response& res) {
+
 	// Assert data validity
 	try {
 		nlohmann::json j = nlohmann::json::parse(req.body);
 
-		try { std::string _ = j["render_id"].get<std::string>(); } catch (std::exception) { throw std::runtime_error("render_id (string) not found on JSON body"); }
-		try { std::string ip = j["ip"]; asio::ip::make_address(ip); } catch (std::exception) { throw std::runtime_error("Valid ip (string) not found on JSON body"); }
+		try { std::string _ = j["render_id"].get<std::string>(); }
+		catch (std::exception) { throw std::runtime_error("render_id (string) not found on JSON body"); }
+
+		try { std::string ip = j["ip"]; asio::ip::make_address(ip); }
+		catch (std::exception) { throw std::runtime_error("Valid ip (string) not found on JSON body"); }
+
+		try { std::string port = j["port"]; if (port.length() != 4) throw std::exception(); }
+		catch (std::exception) { throw std::runtime_error("Valid port (string) not found on JSON body"); }
+		
 		try {
-			std::string port = j["port"]; if (port.length() != 4) throw std::exception();
-		} catch (std::exception) { throw std::runtime_error("Valid port (string) not found on JSON body"); }
-		try {
-			auto width = j["width"]; if (!width.is_number_unsigned() || !width.is_number_integer() || width.get<int>() != width.get<uint16_t>() || width.get<int>() == 0) throw std::exception();
+			auto width = j["width"];
+			if (!width.is_number_unsigned()
+					|| !width.is_number_integer()
+					|| width.get<int>() != width.get<uint16_t>()
+					|| width.get<int>() == 0) throw std::exception();
 		} catch (std::exception) { throw std::runtime_error("Valid width (uint16_t) not found on JSON body"); }
+
 		try {
-			auto height = j["height"]; if (!height.is_number_unsigned() || !height.is_number_integer() || height.get<int>() != height.get<uint16_t>() || height.get<int>() == 0) throw std::exception();
+			auto height = j["height"];
+			if (!height.is_number_unsigned()
+					|| !height.is_number_integer()
+					|| height.get<int>() != height.get<uint16_t>()
+					|| height.get<int>() == 0) throw std::exception();
 		} catch (std::exception) { throw std::runtime_error("Valid height (uint16_t) not found on JSON body"); }
+
 		try {
-			auto tilesize = j["tilesize"]; if (!tilesize.is_number_unsigned() || !tilesize.is_number_integer() || tilesize.get<int>() != tilesize.get<uint8_t>() || tilesize.get<int>() == 0) throw std::exception();
-		} catch (std::exception) { throw std::runtime_error("Valid tilesize (uint8_t) not found on JSON body"); }
-		try {
-			auto samples = j["samples"]; if (!samples.is_number_unsigned() || !samples.is_number_integer() || samples.get<int>() != samples.get<uint16_t>() || samples.get<int>() == 0) throw std::exception();
+			auto samples = j["samples"];
+			if (!samples.is_number_unsigned()
+					|| !samples.is_number_integer()
+					|| samples.get<int>() != samples.get<uint16_t>()
+					|| samples.get<int>() == 0) throw std::exception();
 		} catch (std::exception) { throw std::runtime_error("Valid samples (uint16_t) not found on JSON body"); }
+
 		try {
-			uint16_t width = j["width"]; uint16_t height = j["height"]; uint8_t tilesize = j["tilesize"];
-			int tiles_x = ceil((float)width / tilesize), tiles_y = ceil((float)height / tilesize);
-			std::vector<std::vector<bool>> tiles_to_render = j["tiles_to_render"];
-			if (tiles_to_render.size() != (unsigned long)tiles_y || tiles_to_render[0].size() != (unsigned long)tiles_x) throw std::exception();
-		} catch (std::exception) { throw std::runtime_error("Valid tiles_to_render (bool[][]) not found on JSON body"); }
+			auto pixels_to_skip = j["pixels_to_skip"];
+			if (!pixels_to_skip.is_array() || pixels_to_skip[0].size() != 2) throw std::exception();
+
+			for (size_t i = 0; i < pixels_to_skip.size(); i++) {
+				if (pixels_to_skip[i][0] >= j["height"].get<uint16_t>()
+						|| pixels_to_skip[i][1] >= j["width"].get<uint16_t>()) throw std::exception();
+				for (int j = 0; j < 2; j++)
+					if (!pixels_to_skip[i][j].is_number_unsigned()
+							|| pixels_to_skip[i][j].get<int>()
+							!= pixels_to_skip[i][j].get<uint16_t>()) throw std::exception();
+			}
+		} catch (std::exception) { throw std::runtime_error("Valid pixels_to_skip (uint16_t[][]) not found on JSON body"); }
+
 		try {
 			float pos[3], rot[3];
 			auto& json = j["camera"];
@@ -61,6 +89,7 @@ inline void submit_render(const httplib::Request& req, httplib::Response& res) {
 			pos[1] = json["pos"][1].get<float>(), rot[1] = json["rot"][1].get<float>();
 			pos[2] = json["pos"][2].get<float>(), rot[2] = json["rot"][2].get<float>();
 		} catch (std::exception) { throw std::runtime_error("Valid camera position & rotation (float[3]) not found on JSON body"); }
+
 		try { float _ = j["camera"]["fov"].get<float>(); } catch (std::exception) { throw std::runtime_error("Valid fov (float) not found on JSON body"); }
 
 		uint32_t verts_len = j["verts"].size();
