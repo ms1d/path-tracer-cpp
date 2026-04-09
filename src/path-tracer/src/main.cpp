@@ -61,14 +61,16 @@ int main() {
 			buffers[i][j] = new Pixel[buffer_size];
 		}
 	}
+	//TODO: allocate cuda memory too!
 
 	// The ith buffer owns the ith lock state (used by the ith thread running)
 	// Each thread will control the lock state, eventually setting it to false when it is finished
 	bool lock_states[max_requests] = { };
 	int current_request = -1;
 
-	// If the system crashes, move all previous in progress requests back to the default requests dir
-	std::system("mkdir -p path-tracer/requests/in_progress && mv path-tracer/requests/in_progress/* path-tracer/requests/");
+	// If the system crashes, move all previous in progress requests back
+	// to the default requests dir, ready to start processing again
+	std::system("cd path-tracer/requests && mkdir -p in_progress && mv in_progress/* ./");
 
 	while (true) {
 		find_earliest_request(current_request);
@@ -86,7 +88,7 @@ int main() {
 
 		if (buffer_to_use < 0) { sleep(sleep_period); continue; }
 
-		std::system(std::format("mv path-tracer/requests/{}.json path-tracer/requests/in_progress/{}.json", current_request, current_request).c_str());
+		std::system(std::format("cd path-tracer/requests && mv {}.json in_progress/{}.json", current_request, current_request).c_str());
 		std::thread(handle_request,
 				current_request, buffers[buffer_to_use],
 				std::ref(lock_states[buffer_to_use]), buffers_count)
