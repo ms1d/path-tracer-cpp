@@ -1,17 +1,14 @@
 #include <cstdio>
 #include <cstdlib>
-#include <iostream>
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/wait.h>
 #include <vector>
-#include <fstream>
 #include "json.hpp"
 
 using nlohmann::json;
 
 std::vector<pid_t> children;
-json status_json;
 
 void kill_children() {
 	for (auto pid : children) {
@@ -42,24 +39,19 @@ pid_t spawn(const char *path) {
 }
 
 int main() {
+	// Ensure that children are killed on exit + exit signals
 	signal(SIGINT, sig_handler);
     signal(SIGTERM, sig_handler);
+    signal(SIGKILL, sig_handler);
 	atexit(kill_children);
 
-	std::system("mkdir -p state && touch state/status.json");
     pid_t http_pid = spawn("./http-server/http-server");
     pid_t path_tracer_pid  = spawn("./path-tracer/path-tracer");
 
     while (true) {
-        if (http_pid <= 0) {
-			http_pid = spawn("./http-server/http-server");
-			status_json["http"] = "dead! restarting...";
-		} else status_json["http"] = "running";
+        if (http_pid <= 0) http_pid = spawn("./http-server/http-server");
 
-        if (path_tracer_pid <= 0) {
-			path_tracer_pid = spawn("./path-tracer/path-tracer");
-			status_json["path-tracer"] = "dead! restarting...";
-		} else status_json["path-tracer"] = "running";
+        if (path_tracer_pid <= 0) path_tracer_pid = spawn("./path-tracer/path-tracer");
 
         int status;
         pid_t r;
@@ -78,17 +70,6 @@ int main() {
 		}
 
 		children = new_children;
-
-		// Write status to status.json for the http server
-		std::ofstream file("state/status.json");
-		if (!file.is_open()) {
-			std::cerr << "Failed to open file 'state/status.json'.\n";
-			return 1;
-		}
-
-		file << status_json.dump(4);
-
-		file.close();
 
         sleep(1);
     }
