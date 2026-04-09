@@ -21,7 +21,7 @@
 // width: uint16_t
 // height: uint16_t
 // samples: uint16_t
-// pixels_to_skip: uint16_t[][]. co-ordinates of all pixels to skip
+// OPTIONAL pixels_to_skip: uint16_t[][]. co-ordinates of all pixels to skip
 //	pixel[i][0] is the ith pixels x co-ordinate. pixel[i][1] is the ith pixels y co-ordinate
 //
 // verts: float[]. every 3 floats = 1 vertex
@@ -70,7 +70,7 @@ inline void submit_render(const httplib::Request& req, httplib::Response& res) {
 
 		try {
 			auto pixels_to_skip = j["pixels_to_skip"];
-			if (!pixels_to_skip.is_array() || pixels_to_skip[0].size() != 2) throw std::exception();
+			if (!pixels_to_skip.is_array() || !pixels_to_skip[0].is_array() || (pixels_to_skip[0].size() != 2 && pixels_to_skip[0].size() != 0)) throw std::exception();
 
 			for (size_t i = 0; i < pixels_to_skip.size(); i++) {
 				if (pixels_to_skip[i][0] >= j["height"].get<uint16_t>()
@@ -80,7 +80,7 @@ inline void submit_render(const httplib::Request& req, httplib::Response& res) {
 							|| pixels_to_skip[i][j].get<int>()
 							!= pixels_to_skip[i][j].get<uint16_t>()) throw std::exception();
 			}
-		} catch (std::exception) { throw std::runtime_error("Valid pixels_to_skip (uint16_t[][]) not found on JSON body"); }
+		} catch (std::exception) { if(!j["pixels_to_skip"].is_null()) throw std::runtime_error("Valid pixels_to_skip (uint16_t[][]) not found on JSON body"); }
 
 		try {
 			float pos[3], rot[3];
