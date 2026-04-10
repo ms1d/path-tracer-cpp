@@ -9,6 +9,9 @@
 
 
 inline void check_json(const httplib::Request& req, httplib::Response& res) {
+	// Allow empty bodies - some endpoints don't use them
+	if (req.body.empty()) return;
+
 	try { nlohmann::json j = nlohmann::json::parse(req.body); }
 	catch(std::exception) {
 		res.status = 400;
