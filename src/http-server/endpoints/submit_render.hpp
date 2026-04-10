@@ -26,7 +26,7 @@
 //
 // verts: float[]. every 3 floats = 1 vertex
 // tris: uint32_t[]. every 3 ints = 1 triangle. each element is an index of verts
-// mats: [{ float (smoothness), float (metallic), float[] (rgb) }]
+// mats: [{ float (smoothness), float (metallic), float (emission), float[] (rgb) }]
 // mat_indices: uint8_t[]. each element is an index of materials and represents a triangle in order
 // camera { float (fov), float[] (pos), float[] (rot) }
 inline void submit_render(const httplib::Request& req, httplib::Response& res) {
@@ -70,7 +70,9 @@ inline void submit_render(const httplib::Request& req, httplib::Response& res) {
 
 		try {
 			auto pixels_to_skip = j["pixels_to_skip"];
-			if (!pixels_to_skip.is_array() || !pixels_to_skip[0].is_array() || (pixels_to_skip[0].size() != 2 && pixels_to_skip[0].size() != 0)) throw std::exception();
+			if (!pixels_to_skip.is_array()
+					|| !pixels_to_skip[0].is_array()
+					|| (pixels_to_skip[0].size() != 2 && pixels_to_skip[0].size() != 0)) throw std::exception();
 
 			for (size_t i = 0; i < pixels_to_skip.size(); i++) {
 				if (pixels_to_skip[i][0] >= j["height"].get<uint16_t>()
@@ -79,12 +81,14 @@ inline void submit_render(const httplib::Request& req, httplib::Response& res) {
 					if (!pixels_to_skip[i][j].is_number_unsigned()
 							|| pixels_to_skip[i][j].get<int>()
 							!= pixels_to_skip[i][j].get<uint16_t>()) throw std::exception();
+			if (!j.contains("pixels_to_skip")) return;
 			}
 		} catch (std::exception) { if(!j["pixels_to_skip"].is_null()) throw std::runtime_error("Valid pixels_to_skip (uint16_t[][]) not found on JSON body"); }
 
 		try {
 			float pos[3], rot[3];
 			auto& json = j["camera"];
+			if (json["pos"].size() != 3 || json["rot"].size() != 3) throw std::exception();
 			pos[0] = json["pos"][0].get<float>(), rot[0] = json["rot"][0].get<float>();
 			pos[1] = json["pos"][1].get<float>(), rot[1] = json["rot"][1].get<float>();
 			pos[2] = json["pos"][2].get<float>(), rot[2] = json["rot"][2].get<float>();
@@ -109,6 +113,14 @@ inline void submit_render(const httplib::Request& req, httplib::Response& res) {
 		for (uint32_t i = 0; i < mats_indices_len; i++) {
 			uint32_t index = mats_indices[i].get<uint32_t>();
 			if (index >= mats_len) throw std::runtime_error("An element of mats_indices references an invalid index on mats");
+		}
+
+		// Ensure materials meet schema
+		if (!mats[0].contains("smoothness") || !mats[0]["smoothness"].is_number_unsigned() || __builtin_fabs(mats[0]["smoothness"]) > 1
+				|| !mats[0].contains("metallic") || !mats[0]["metallic"].is_number_unsigned() || __builtin_fabs(mats[0]["metallic"]) > 1
+				|| !mats[0].contains("emission") || !mats[0]["emission"].is_number_unsigned()
+				|| !mats[0].contains("rgb") || !mats[0]["rgb"].is_array() || mats[0]["rgb"].size() != 3) {
+			throw std::runtime_error("Materials must have smoothness, metallic, emission and rgb values");
 		}
 	}
 
