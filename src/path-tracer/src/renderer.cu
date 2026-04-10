@@ -14,24 +14,24 @@ std::uniform_real_distribution<float> dist(1.0, 2.0);
 
 
 void start_render(
+	uint16_t **pixels_to_skip, uint32_t pixels_to_skip_len,
     vec<3> *verts, uint32_t verts_len,
     uint32_t *tris, uint32_t tris_len,
     Materials mats,
     uint32_t *mat_indices, uint32_t mat_indices_len,
     vec<3> cam_pos, vec<3> cam_dir, float fov,
-	uint8_t tilesize,
-	Pixel** buffer, std::atomic<int>& curr_buffer, int buffers_count) {
+	Pixel* buffer, std::atomic<int>& curr_gpu_write_count, uint64_t request_size, Pixel *cuda_buffers) {
 
-	while (curr_buffer < buffers_count) {
-		int curr_buffer_index = curr_buffer % buffers_count;
+	while (curr_gpu_write_count < request_size) {
+		int curr_gpu_write_index = curr_gpu_write_count % request_size;
 
 		// simulate work
 		sleep(dist(rng));
 
-		curr_buffer++;
-		std::cout << "Moved gpu buffer up to " << curr_buffer << std::endl;	
+		curr_gpu_write_count++;
+		std::cout << "Moved gpu buffer up to " << curr_gpu_write_count << std::endl;	
 	}
 
-	curr_buffer = -1;
+	curr_gpu_write_count = -1;
 	std::cout << "gpu is done" << std::endl;
 }

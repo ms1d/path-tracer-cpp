@@ -13,13 +13,23 @@ constexpr int cpu_sleep_period = 1;
 
 
 
-void parse_request(const nlohmann::json& request,
-		vec<3>*& verts, uint32_t& verts_len,
-		uint32_t*& tris, uint32_t& tris_len,
-		Materials& mats,
-		uint32_t*& mats_indices, uint32_t& mats_indices_len,
+void parse_request(const nlohmann::json &request,
+		uint16_t **&pixels_to_skip, uint32_t &pixels_to_skip_len,
+		vec<3> *&verts, uint32_t &verts_len,
+		uint32_t *&tris, uint32_t &tris_len,
+		Materials &mats,
+		uint32_t *&mats_indices, uint32_t &mats_indices_len,
 		vec<3> &camPos, vec<3> &camRot, float &camFov,
-		uint8_t &tilesize) {
+		uint64_t &request_size) {
+
+	auto& pixels_to_skip_json = request["pixels_to_skip"];
+	pixels_to_skip_len = pixels_to_skip_json.size();
+	pixels_to_skip = new uint16_t*[pixels_to_skip_len];
+	for (size_t i = 0; i < pixels_to_skip_len; i++) {
+		pixels_to_skip[i] = new uint16_t[2];
+		pixels_to_skip[i][0] = pixels_to_skip_json[i][0].get<uint16_t>();
+		pixels_to_skip[i][1] = pixels_to_skip_json[i][1].get<uint16_t>();
+	}
 
 	verts_len = request["verts"].size() / 3;
 	verts = new vec<3>[verts_len];
@@ -67,12 +77,12 @@ void parse_request(const nlohmann::json& request,
 	camPos.z = pos_json[2].get<float>(), camRot.z = rot_json[2].get<float>();
 	camFov = camera_json["fov"].get<float>();
 
-	tilesize = request["tilesize"].get<uint8_t>();
+	request_size = request["width"].get<uint64_t>() * request["height"].get<uint64_t>() & request["samples"].get<uint64_t>();
 }
 
 
 
-void handle_request(int current_request, Pixel **buffers, bool &lock_state, int buffers_count) {
+void handle_request(int current_request, Pixel *buffer, Pixel *cuda_buffers, bool &lock_state) {
 	std::string path_to_current_request = std::format("path-tracer/requests/in_progress/{}.json", current_request).c_str();
 	std::ifstream file(path_to_current_request);
 	nlohmann::json request;
@@ -83,54 +93,58 @@ void handle_request(int current_request, Pixel **buffers, bool &lock_state, int 
 		_exit(1);
 	}
 
-	vec<3>* verts;
+	uint16_t **pixels_to_skip; uint32_t pixels_to_skip_len;
+	vec<3> *verts;
 	uint32_t verts_len;
-	uint32_t* tris;
+	uint32_t *tris;
 	uint32_t tris_len;
 	Materials mats;
-	uint32_t* mats_indices;
+	uint32_t *mats_indices;
 	uint32_t mats_indices_len;
 	vec<3> camPos, camRot;
 	float camFov;
-	uint8_t tilesize;
+	uint64_t request_size;
 	
 	parse_request(request,
+			pixels_to_skip, pixels_to_skip_len,
 			verts, verts_len,
 			tris, tris_len,
 			mats,
 			mats_indices, mats_indices_len,
 			camPos, camRot, camFov,
-			tilesize);
+			request_size);
 
-	std::atomic<int> curr_gpu_buffer = 0;
+	std::atomic<int> curr_gpu_write_count = 0;
 
 	std::thread(start_render,
+			pixels_to_skip, pixels_to_skip_len,
 			verts, verts_len,
 			tris, tris_len,
 			mats,
 			mats_indices, mats_indices_len,
 			camPos, camRot, camFov,
-			tilesize,
-			buffers, std::ref(curr_gpu_buffer), std::ref(buffers_count))
+			buffer, std::ref(curr_gpu_write_count), request_size, cuda_buffers)
 		.detach();
 
-	int curr_cpu_buffer = 0;
+	int curr_cpu_read_count = 0;
 	while (true) {
-		if (curr_gpu_buffer.load() == -1) break; // in reality, just signal that the loop should end soon before finsihing off work. dont just break
-		else if (curr_gpu_buffer.load() <= curr_cpu_buffer) { sleep(cpu_sleep_period); continue; }
+		if (curr_gpu_write_count.load() == -1) break; // in reality, just signal that the loop should end soon before finsihing off work. dont just break
+		else if (curr_gpu_write_count.load() <= curr_cpu_read_count) { sleep(cpu_sleep_period); continue; }
 
 		// for now, just print something for testing
 		sleep(1);
-		curr_cpu_buffer++;
-		std::cout << "Buffer moved up! Now on buffer " << curr_cpu_buffer << std::endl;
+		curr_cpu_read_count++;
+		std::cout << "Buffer moved up! Now on buffer " << curr_cpu_read_count << std::endl;
 
 		// work with this index
-		int curr_cpu_buffer_index = curr_cpu_buffer % buffers_count;
+		int curr_cpu_read_index = curr_cpu_read_count % request_size;
 	}
 
 	// Once finished work, remove the request + delete heap data + mark lock as free
 	std::system(std::format("rm {}", path_to_current_request).c_str());
 
+	for (uint32_t i = 0; i < pixels_to_skip_len; i++) delete[] pixels_to_skip[i];
+	delete[] pixels_to_skip;
 	delete[] verts;
 	delete[] tris;
 	delete[] mats.smoothness;

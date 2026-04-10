@@ -4,11 +4,10 @@
 #include <asio.hpp>
 #include "request_handler.hpp"
 #include "structs.cuh"
+#include "buffer_setup.cuh"
 
 
 
-// Number of buffers per multi-buffer
-constexpr int buffers_count = 3;
 // Default size of each buffer
 constexpr int buffer_size = 1e8;
 // Maximum + current number of requests being handled at once. Determines how many mutli-buffers are allocated at program start
@@ -53,15 +52,13 @@ void find_earliest_request(int& current_request) {
 
 int main() {
 	// Buffers setup
-	// buffers is a 3D array. Each element is a multi-buffer for 1 thread ONLY
-	Pixel*** buffers = new Pixel**[max_requests];
-	for (int i = 0; i < max_requests; i++) {
-		buffers[i] = new Pixel*[buffers_count];
-		for (int j = 0; j < buffers_count; j++) {
-			buffers[i][j] = new Pixel[buffer_size];
-		}
-	}
-	//TODO: allocate cuda memory too!
+	// buffers is a 2D array. Each element is a buffer for 1 thread ONLY
+	Pixel** buffers = new Pixel*[max_requests];
+	for (int i = 0; i < max_requests; i++) buffers[i] = new Pixel[buffer_size];
+
+	Pixel* cuda_buffers;
+	alloc(cuda_buffers, max_requests, buffer_size);
+
 
 	// The ith buffer owns the ith lock state (used by the ith thread running)
 	// Each thread will control the lock state, eventually setting it to false when it is finished
@@ -90,17 +87,14 @@ int main() {
 
 		std::system(std::format("cd path-tracer/requests && mv {}.json in_progress/{}.json", current_request, current_request).c_str());
 		std::thread(handle_request,
-				current_request, buffers[buffer_to_use],
-				std::ref(lock_states[buffer_to_use]), buffers_count)
+				current_request, buffers[buffer_to_use], cuda_buffers,
+				std::ref(lock_states[buffer_to_use]))
 			.detach();
 	}
 
-	for (int i = 0; i < max_requests; i++) {
-		for (int j = 0; j < buffers_count; j++) {
-			delete[] buffers[i][j];
-		}
-		delete[] buffers[i];
-	}
+	dealloc(cuda_buffers);
+
+	for (int i = 0; i < max_requests; i++) delete[] buffers[i];
 	delete[] buffers;
 
 	return 1;
