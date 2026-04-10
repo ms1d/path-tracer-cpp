@@ -5,7 +5,6 @@
 #include "asio/ip/address.hpp"
 #include "httplib.h"
 #include "../helpers/gen_content.hpp"
-#include "../helpers/decompress.hpp"
 #include <cstdint>
 #include <ctime>
 #include <exception>
@@ -198,20 +197,7 @@ inline void populate_parsed_body(nlohmann::json &out, const nlohmann::json &in, 
 // mat_indices: uint8_t[]. each element is an index of materials and represents a triangle in order
 // camera { float (fov between 0 and 180 exclusive), float[] (pos), float[] (rot) }
 inline void submit_render(const httplib::Request& req, httplib::Response& res) {
-	nlohmann::json parsed_body, incoming_body;
-
-	// Accept compressed payloads via gzip
-	if (req.has_header("Content-Encoding") && req.get_header_value("Content-Encoding") == "gzip") {
-		std::cout << "here!" << std::endl;
-		try { incoming_body = nlohmann::json::parse(gzip_decompress(req.body)); }
-		catch (const std::exception &e) {
-			res.status = 400;
-			res.set_content(gen_content(400, "Could not decompress incoming body"), "application/json");
-			return;
-		}
-	}
-
-	else { incoming_body = nlohmann::json::parse(req.body); }
+	nlohmann::json parsed_body, incoming_body = nlohmann::json::parse(req.body);
 
 
 	// Assert data validity

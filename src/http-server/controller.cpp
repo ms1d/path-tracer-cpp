@@ -1,11 +1,14 @@
 #include "httplib.h"
-#include "json.hpp"
 #include "endpoints/health.hpp"
 #include "endpoints/submit_render.hpp"
 #include "middleware/middleware_base.hpp"
 #include "middleware/check_json.hpp"
 
-using nlohmann::json;
+
+
+constexpr int max_payload_length = 25e6;
+
+
 
 int main() {
 	httplib::Server svr;
@@ -18,6 +21,8 @@ int main() {
 	// Call endpoints. MUST wrap to use middleware
 	svr.Get("/health", mw.wrap_endpoint("/health", health));
 	svr.Post("/submit-render", mw.wrap_endpoint("/submit-render", submit_render));
+
+	svr.set_payload_max_length(max_payload_length);
 
 	svr.listen("localhost", 8080);
 
