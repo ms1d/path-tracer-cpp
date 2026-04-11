@@ -4,6 +4,6 @@
 
 
 
-void alloc(Pixel *&buffers, int buffers_count, int buffer_length);
+void alloc(Pixel *&buffers, uint max_requests, uint buffer_count, uint buffer_length);
 
 void dealloc(Pixel *&buffers);

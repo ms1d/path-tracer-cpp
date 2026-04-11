@@ -82,7 +82,7 @@ void parse_request(const nlohmann::json &request,
 
 
 
-void handle_request(int current_request, Pixel *buffer, Pixel *cuda_buffers, bool &lock_state) {
+void handle_request(int current_request, Pixel **multi_buffer, Pixel *cuda_buffers, bool &lock_state) {
 	std::string path_to_current_request = std::format("path-tracer/requests/in_progress/{}.json", current_request).c_str();
 	std::ifstream file(path_to_current_request);
 	nlohmann::json request;
@@ -123,7 +123,7 @@ void handle_request(int current_request, Pixel *buffer, Pixel *cuda_buffers, boo
 			mats,
 			mats_indices, mats_indices_len,
 			camPos, camRot, camFov,
-			buffer, std::ref(curr_gpu_write_count), request_size, cuda_buffers)
+			multi_buffer, std::ref(curr_gpu_write_count), request_size, cuda_buffers)
 		.detach();
 
 	int curr_cpu_read_count = 0;

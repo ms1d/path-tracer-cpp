@@ -8,12 +8,14 @@
 
 
 
-// Default size of each buffer
-constexpr int buffer_size = 1e8;
 // Maximum + current number of requests being handled at once. Determines how many mutli-buffers are allocated at program start
-constexpr int max_requests = 3;
+constexpr uint max_requests = 3;
+// Number of buffers per multi-buffer
+constexpr uint buffer_count = 2;
+// Default size of each buffer
+constexpr uint buffer_size = 1e8;
 // Period to sleep if no requests are available
-constexpr int sleep_period = 5;
+constexpr uint sleep_period = 5;
 
 
 
@@ -53,11 +55,16 @@ void find_earliest_request(int& current_request) {
 int main() {
 	// Buffers setup
 	// buffers is a 2D array. Each element is a buffer for 1 thread ONLY
-	Pixel** buffers = new Pixel*[max_requests];
-	for (int i = 0; i < max_requests; i++) buffers[i] = new Pixel[buffer_size];
+	Pixel*** multi_buffers = new Pixel**[max_requests];
+	for (uint i = 0; i < max_requests; i++) {
+		multi_buffers[i] = new Pixel*[buffer_count];
+		for (uint j = 0; j < buffer_count; j++) {
+			multi_buffers[i][j] = new Pixel[buffer_size];
+		}
+	}
 
 	Pixel* cuda_buffers;
-	alloc(cuda_buffers, max_requests, buffer_size);
+	alloc(cuda_buffers, max_requests, buffer_size, buffer_count);
 
 
 	// The ith buffer owns the ith lock state (used by the ith thread running)
@@ -76,7 +83,7 @@ int main() {
 
 		// Pass it onto another thread
 		int buffer_to_use = -1;
-		for (int i = 0; i < max_requests; i++) {
+		for (uint i = 0; i < max_requests; i++) {
             if (lock_states[i]) continue;
             buffer_to_use = i;
             lock_states[i] = true;
@@ -87,15 +94,19 @@ int main() {
 
 		std::system(std::format("cd path-tracer/requests && mv {}.json in_progress/{}.json", current_request, current_request).c_str());
 		std::thread(handle_request,
-				current_request, buffers[buffer_to_use], cuda_buffers,
+				current_request, multi_buffers[buffer_to_use], cuda_buffers,
 				std::ref(lock_states[buffer_to_use]))
 			.detach();
 	}
 
 	dealloc(cuda_buffers);
 
-	for (int i = 0; i < max_requests; i++) delete[] buffers[i];
-	delete[] buffers;
+	for (uint i = 0; i < max_requests; i++) {
+		for (uint j = 0; j < buffer_count; j++) delete[] multi_buffers[i][j];
+		delete[] multi_buffers[i];
+	}
+
+	delete[] multi_buffers;
 
 	return 1;
 }

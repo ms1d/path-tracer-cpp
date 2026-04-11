@@ -24,5 +24,5 @@ void start_render(
 	Materials mats,
 	uint32_t *mat_indices, uint32_t mat_indices_len,
 	vec<3> cam_pos, vec<3> cam_dir, float fov,
-	Pixel *buffer, std::atomic<int> &curr_buffer, uint64_t request_size, Pixel *cuda_buffers
+	Pixel **multi_buffer, std::atomic<int> &curr_buffer, uint64_t request_size, Pixel *cuda_buffers
 );
