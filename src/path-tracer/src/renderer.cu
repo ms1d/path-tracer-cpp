@@ -22,16 +22,7 @@ void start_render(
     vec<3> cam_pos, vec<3> cam_dir, float fov,
 	Pixel **multi_buffer, std::atomic<int>& curr_gpu_write_count, uint64_t request_size, Pixel *cuda_buffers) {
 
-	while (curr_gpu_write_count < request_size) {
-		int curr_gpu_write_index = curr_gpu_write_count % request_size;
-
-		// simulate work
-		sleep(dist(rng));
-
-		curr_gpu_write_count++;
-		std::cout << "Moved gpu buffer up to " << curr_gpu_write_count << std::endl;	
-	}
-
+	// orchestration algorithm: using request size, group into buffers and sequentially launch kernels
 	curr_gpu_write_count = -1;
 	std::cout << "gpu is done" << std::endl;
 }
