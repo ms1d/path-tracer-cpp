@@ -67,7 +67,7 @@ int main() {
 
 	// If the system crashes, move all previous in progress requests back
 	// to the default requests dir, ready to start processing again
-	std::system("cd path-tracer/requests && mkdir -p in_progress && mv in_progress/* ./");
+	std::system("mkdir -p path-tracer/requests && cd path-tracer/requests && mkdir -p in_progress && mv in_progress/* ./");
 
 	while (true) {
 		find_earliest_request(current_request);
