@@ -9,8 +9,9 @@
 
 
 inline void check_json(const httplib::Request& req, httplib::Response& res) {
-	// Allow empty bodies - some endpoints don't use them
-	if (req.body.empty()) return;
+	// Allow empty && non-json bodies
+	if (req.body.empty()
+			|| (req.has_header("Content-Type") && req.get_header_value("Content-Type") != std::string("application/json"))) return;
 
 	try { nlohmann::json j = nlohmann::json::parse(req.body); }
 	catch(std::exception) {
