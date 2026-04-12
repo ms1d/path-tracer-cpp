@@ -2,6 +2,7 @@
 #include "endpoints/health.hpp"
 #include "endpoints/submit_render.hpp"
 #include "endpoints/upload_mesh.hpp"
+#include "endpoints/mesh_status.hpp"
 #include "middleware/middleware_base.hpp"
 #include "middleware/check_json.hpp"
 
@@ -20,9 +21,10 @@ int main() {
 	mw.add_middleware(check_json, [](const Request&, Response&) {});
 
 	// Call endpoints. MUST wrap to use middleware
-	svr.Get("/health", mw.wrap_endpoint("/health", health));
-	svr.Post("/submit-render", mw.wrap_endpoint("/submit-render", submit_render));
-	svr.Post("/upload-mesh", mw.wrap_endpoint("/upload-mesh", upload_mesh));
+	svr.Get("/health", mw.wrap_endpoint(health));
+	svr.Post("/submit-render", mw.wrap_endpoint(submit_render));
+	svr.Post("/upload-mesh", mw.wrap_endpoint(upload_mesh));
+	svr.Get("/mesh-status", mw.wrap_endpoint(mesh_status));
 
 	svr.set_payload_max_length(max_payload_length);
 

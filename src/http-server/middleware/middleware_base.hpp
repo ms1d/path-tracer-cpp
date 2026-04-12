@@ -33,10 +33,6 @@ class middleware {
 
 
 
-		std::unordered_set<std::string> routes;
-
-
-
 		void run_middleware_incoming(const Request& req, Response& res) {
 			for (auto layer : incoming_layers) if(res.status == -1) layer(req, res);
 		}
@@ -64,9 +60,7 @@ class middleware {
 
 		// ALL API routes declared in controller.cpp MUST be wrapped to use middleware
 		std::function<void(const Request&, Response&)>
-			wrap_endpoint(const std::string& route, std::function<void(const Request& req, Response& res)> handler) {
-
-			routes.emplace(route);
+			wrap_endpoint(std::function<void(const Request& req, Response& res)> handler) {
 
 			return [handler, this](const Request& req, Response& res){
 				run_middleware_incoming(req, res);
