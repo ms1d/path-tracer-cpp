@@ -244,7 +244,7 @@ inline void create_request_file(const nlohmann::json &content) {
 //
 // mats: [{ smoothness: float, metallic: float, emission: float, rgb: float[3] }]
 // camera { fov (between 0 and 180 exclusive): float, pos: float[3], rot: float[3] }
-// objects [{ mesh_id: string, mat_index (references mats[index]): uint8_t pos: float[3], rot: float[3], scale: float[3] }}]
+// objects [{ mesh_id: string, mat_index (references mats[index]): uint8_t, pos: float[3], rot: float[3], scale: float[3] }}]
 inline void submit_render(const httplib::Request& req, httplib::Response& res) {
 	nlohmann::json incoming_body = nlohmann::json::parse(req.body);
 
