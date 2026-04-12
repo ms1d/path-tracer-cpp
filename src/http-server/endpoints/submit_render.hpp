@@ -246,6 +246,12 @@ inline void create_request_file(const nlohmann::json &content) {
 // camera { fov (between 0 and 180 exclusive): float, pos: float[3], rot: float[3] }
 // objects [{ mesh_id: string, mat_index (references mats[index]): uint8_t, pos: float[3], rot: float[3], scale: float[3] }}]
 inline void submit_render(const httplib::Request& req, httplib::Response& res) {
+	if (!req.has_header("Content-Type") || req.get_header_value("Content-Type") != std::string("application/json")) {
+		res.status = 400;
+		res.set_content(gen_content(400, "Content-Type header was not found, or was not application/json."), "application/json");
+		return;
+	}
+
 	nlohmann::json incoming_body = nlohmann::json::parse(req.body);
 
 	// Assert data validity
