@@ -7,7 +7,7 @@ See also `ms1d/PathTracerApi` and `ms1d/path-tracer-react`.
 
 ## Architecture
 
-- Master process - manages 3 child processes (UDP, HTTP, Path Tracer)
+- Master process - manages 2 child processes (`http-server`, `path-tracer`)
 
 - HTTP - accepts standard REST API requests (health check, submit render)
 
