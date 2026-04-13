@@ -2,18 +2,17 @@
 
 
 
-#include "vec.cuh"
-#include "precision.cuh"
-#include <utility>
-
-
-
 #ifndef __host__
 #define __host__
 #endif
 #ifndef __device__
 #define __device__
 #endif
+
+
+
+#include "vec.cuh"
+#include "precision.cuh"
 
 
 
