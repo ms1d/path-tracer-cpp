@@ -13,7 +13,7 @@
 
 #include "vec.cuh"
 #include "precision.cuh"
-#include <iostream> // IWYU pragma: keep
+#include <iostream>
 
 // Generic 3D Ray. Implements:
 //
@@ -36,11 +36,8 @@ struct ray {
 
 
 
-	// Redundant res temporary here to suppress clangd error
-	// Compiler should optimise it away
 	__host__ __device__ constexpr vec<3> get_point(float t) const {
-		vec<3> res = o + dir * t;
-		return res;
+		return o + dir * t;
 	}
 
 
@@ -82,8 +79,7 @@ struct ray {
 	// Redundant res temporary here to suppress clangd error
 	// Compiler should optimise it away
 	__host__ __device__ constexpr bool operator==(const ray& other) const {
-		bool res = o == other.o && dir == other.dir;
-		return res;
+		return o == other.o && dir == other.dir;
 	}
 
 
@@ -105,12 +101,10 @@ struct ray {
 
 
 
-#ifndef __CUDA_ARCH__
 	friend std::ostream& operator<<(std::ostream& os, const ray& r) {
 		os << "Origin: " << r.o << '\n' << "Direction: " << r.dir << std::endl;
 		return os;
 	}
-#endif
 
 
 
