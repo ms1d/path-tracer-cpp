@@ -6,3 +6,4 @@ target_link_libraries(main PRIVATE jsonlib)
 
 add_subdirectory(http-server)
 add_subdirectory(path-tracer)
+add_subdirectory(bvh-builder)
