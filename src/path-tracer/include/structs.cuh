@@ -23,7 +23,7 @@ struct alignas(16) Pixel {
 };
 
 struct Materials {
-	vec<3>* colors;
-	float *smoothness, *metallic;
-	uint32_t length;
+	vec<3> *rgb;
+	float *smoothness, *metallic, *emission;
+	uint8_t length;
 };
