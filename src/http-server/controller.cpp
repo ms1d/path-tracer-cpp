@@ -2,7 +2,6 @@
 #include "endpoints/health.hpp"
 #include "endpoints/submit_render.hpp"
 #include "endpoints/upload_mesh.hpp"
-#include "endpoints/mesh_status.hpp"
 #include "middleware/middleware_base.hpp"
 #include "middleware/check_json.hpp"
 
@@ -24,7 +23,6 @@ int main() {
 	svr.Get("/health", mw.wrap_endpoint(health));
 	svr.Post("/submit-render", mw.wrap_endpoint(submit_render));
 	svr.Post("/upload-mesh", mw.wrap_endpoint(upload_mesh));
-	svr.Get("/mesh-status", mw.wrap_endpoint(mesh_status));
 
 	svr.set_payload_max_length(max_payload_length);
 
