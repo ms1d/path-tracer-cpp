@@ -2,17 +2,17 @@
 
 
 
-#include <iostream> // IWYU pragma: keep
-#include "precision.cuh"
-
-
-
 #ifndef __host__
 #define __host__
 #endif
 #ifndef __device__
 #define __device__
 #endif
+
+
+
+#include <iostream> 
+#include "precision.cuh"
 
 
 
@@ -173,8 +173,6 @@ __host__ __device__ constexpr vec<dim> operator*(float scalar, const vec<dim>& v
 
 
 
-// Suppress clangd errors
-#ifndef __CUDA_ARCH__
 template<size_t dim> 
 constexpr std::ostream& operator<<(std::ostream& os, const vec<dim>& v) {
 	const float* d = v.data;
@@ -186,8 +184,6 @@ constexpr std::ostream& operator<<(std::ostream& os, const vec<dim>& v) {
 	}
 	return os << ")";
 }
-#endif
-
 
 
 
@@ -239,39 +235,6 @@ struct vec<3> : vec_base<3, vec<3>> {
         return *this;
     }
 
-
-
-
-	// Explicit redifinitions of operators to help clangd LSP
-	// in .cu files. Compiler will optimise these out fully.
-	// It struggles finding CRTP base methods through vec_base
-	__host__ __device__ constexpr vec<3> operator+(const vec<3>& other) const { return base::operator+(other); }
-	__host__ __device__ constexpr vec<3>& operator+=(const vec<3>& other) { return base::operator+=(other); }
-
-	__host__ __device__ constexpr vec<3> operator-(const vec<3>& other) const { return base::operator-(other); }
-	__host__ __device__ constexpr vec<3>& operator-=(const vec<3>& other) { return base::operator-=(other); }
-
-	__host__ __device__ constexpr float operator*(const vec<3>& other) const { return base::operator*(other); }
-	__host__ __device__ constexpr vec<3>& operator*=(float scalar) { return base::operator*=(scalar); }
-	__host__ __device__ constexpr vec<3> operator*(float scalar) const { return base::operator*(scalar); }
-
-	__host__ __device__ constexpr float operator[](size_t i) const { return base::operator[](i); }
-	__host__ __device__ constexpr float mag() const { return base::mag(); }
-
-	__host__ __device__ constexpr vec<3> norm() const { return base::norm(); }
-	__host__ __device__ constexpr vec<3> norm_inplace() { return base::norm_inplace(); }
-
-	__host__ __device__ constexpr bool operator==(const vec<3>& other) const { return base::operator==(other); }
-
-
-
-#ifndef __CUDA_ARCH__
-	// Explicit implementation for vec<3>
-	friend std::ostream& operator<<(std::ostream& os, const vec<3>& v) {
-		os << "(" << v.x << "," << v.y << "," << v.z << ")";
-		return os;
-	}
-#endif
 
 
 };
